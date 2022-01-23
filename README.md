@@ -27,15 +27,26 @@ $adminPwd = Get-Secret -Name AdminPWD -AsPlainText
 If we are going to use Microsoft Graph API wrappers from the C# app we have to create [a secret store].(https://docs.microsoft.com/en-us/aspnet/core/security/app-secrets?view=aspnetcore-6.0&tabs=windows)
 The following commands add UserSecretsId element to the csproj file and create secrets in 'c:\Users\&lt;username&gt;\AppData\Roaming\Microsoft\UserSecrets '. 
 Of course, before you run those commands you have to get secrets from Azure Portal when you register your app there in Azure AD.
+_'MailboxName'_ is needed to have a reference where to get incoming email messages. 
 
 ```
 
 cd .\src\CreateUser\ 
 dotnet user-secrets init
+dotnet user-secrets set "AdminUPN" "***"
+dotnet user-secrets set "AdminPWD" "***"
 dotnet user-secrets set "ClientId" "***"
 dotnet user-secrets set "TenantId" "***"
 dotnet user-secrets set "ClientSecret" "***"
 dotnet user-secrets set "MailboxName" "***"
+
+```
+
+If we are going to use Azure Service Bus, set additional secrets for a .NET application only: 
+
+```
+
+dotnet user-secrets set "ServiceBus:ConnectionString" "***"
 
 ```
 
@@ -45,12 +56,15 @@ Possible candidates to implement this feature are listed in the next table
 |-------|-----|---|---|---|
 | [MSOnline](https://docs.microsoft.com/en-us/powershell/azure/active-directory/install-msonlinev1?view=azureadps-1.0) | Powershell | n/a  | New-MsolUser | Deprecated |
 | [AzureAD](https://docs.microsoft.com/en-us/powershell/azure/active-directory/overview?view=azureadps-2.0) + [ExchangeOnlineManagement](https://docs.microsoft.com/en-us/powershell/exchange/exchange-online-powershell-v2?view=exchange-ps) | Powershell | n/a | New-AzureADUser, Set-AzureADUserLicense, Set-Mailbox, New-MailboxFolder, New-InboxRule | AzureAD works on Windows only  |
-| [Az](https://docs.microsoft.com/en-us/powershell/azure/what-is-azure-powershell?view=azps-7.1.0): Az.Accounts, Az.Resources + [ExchangeOnlineManagement](https://docs.microsoft.com/en-us/powershell/exchange/exchange-online-powershell-v2?view=exchange-ps)| Powershell | Powershell | New-AzADUser |  No way to assign [the license](https://stackoverflow.com/questions/54423267/how-to-add-a-license-to-an-user-on-az-powershell) |
+| [Az](https://docs.microsoft.com/en-us/powershell/azure/what-is-azure-powershell?view=azps-7.1.0): Az.Accounts + [ExchangeOnlineManagement](https://docs.microsoft.com/en-us/powershell/exchange/exchange-online-powershell-v2?view=exchange-ps)| Powershell | Powershell | New-AzADUser |  No way to assign [the license](https://stackoverflow.com/questions/54423267/how-to-add-a-license-to-an-user-on-az-powershell) |
+| [Az](https://docs.microsoft.com/en-us/powershell/azure/what-is-azure-powershell?view=azps-7.1.0): Az.Accounts + [AzureAD.Standard.Preview](https://www.poshtestgallery.com/packages/AzureAD.Standard.Preview) + [ExchangeOnlineManagement](https://docs.microsoft.com/en-us/powershell/exchange/exchange-online-powershell-v2?view=exchange-ps)| Powershell | Powershell | Get-AzAccessToken, New-AzureADUser, Set-AzureADUserLicense, Set-Mailbox, New-MailboxFolder, New-InboxRule | _Az.Accounts_ is needed to connect and get a token for _AzureAD.Standard.Preview_ |
 | [Microsoft Graph API](https://docs.microsoft.com/en-us/graph/sdks/create-requests?tabs=CS) | C# | C# |   |  No way to add an alias |
 
 One can play with Microsoft Graph API (https://developer.microsoft.com/en-us/graph/graph-explorer)
 
 Take a look at the general idea of [the design](doc/mail-processing.md). 
+
+That design is implemented in a form of the dockerized application. See [details](src/AddMailAliasService/README.md) in the project folder. 
 
 Below is how to get the environment ready to use this repository and some important command to note.
 
@@ -105,4 +119,10 @@ https://aka.ms/powershell
 Type 'help' to get help.
 
 PS >
+```
+
+Another option to work with a _linux_ based _PowerShell_ environment is to spin up a container. This container has a preinstalled _PowerShell_ and a number of _Az.*_ modules. It's easier to start and remove such a container if you want to check new features. Note _'bash'_ command, otherwise it starts _'pwsh'_ and you won't be able to add any other packages but PowerShell modules.
+
+```
+docker run -it mcr.microsoft.com/azure-powershell bash
 ```

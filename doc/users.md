@@ -21,7 +21,7 @@ Connect-AzureAD -Credential $adminCred
 # Create a user
 $passwordProfile = New-Object -TypeName Microsoft.Open.AzureAD.Model.PasswordProfile
 $passwordProfile.Password = <password>
-New-AzureADUser -UserPrincipalName "user1@company.com" -DisplayName "User1" -PasswordProfile $passwordProfile -Mailnickname "user1" -UsageLocation "US"
+New-AzureADUser -UserPrincipalName "user1@company.com" -DisplayName "User1" -PasswordProfile $passwordProfile -Mailnickname "user1" -UsageLocation "US" -AccountEnabled:$true
 
 # Assign the license
 $license = New-Object -TypeName Microsoft.Open.AzureAD.Model.AssignedLicense
